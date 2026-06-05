@@ -13,22 +13,22 @@ class LegacyCamCard extends HTMLElement {
     if (!this.content) {
       this.innerHTML = `
         <ha-card>
-          <div class="wrapper">
+          <div class="lc-wrapper">
 
-            <img id="preview" />
+            <img id="preview" class="lc-preview" />
 
-            <button class="flash" id="flashBtn">⚡</button>
+            <button class="lc-flash" id="flashBtn">⚡</button>
 
           </div>
 
-          <div class="overlay hidden" id="overlay">
-            <div class="overlay-content">
+          <div class="lc-overlay hidden" id="overlay">
+            <div class="lc-overlay-content">
 
-              <button class="close" id="closeBtn">✕</button>
+              <button class="lc-close" id="closeBtn">✕</button>
 
-              <img id="stream" />
+              <img id="stream" class="lc-stream" />
 
-              <button class="flash overlay-flash" id="flashBtn2">⚡</button>
+              <button class="lc-flash-overlay" id="flashBtn2">⚡</button>
 
             </div>
           </div>
@@ -38,25 +38,27 @@ class LegacyCamCard extends HTMLElement {
 
       this.content = true;
 
-      this.updatePreview();
+      this._updatePreview();
 
+      // OPEN STREAM
       this.querySelector("#preview").onclick = () => {
         const overlay = this.querySelector("#overlay");
         const stream = this.querySelector("#stream");
 
         stream.src = this.config.stream;
-
         overlay.classList.remove("hidden");
       };
 
+      // CLOSE
       this.querySelector("#closeBtn").onclick = () => {
         this.querySelector("#overlay").classList.add("hidden");
         this.querySelector("#stream").src = "";
       };
 
+      // FLASH toggle
       const toggleFlash = () => {
         const entity = this.config.flash_entity;
-        const state = this._hass.states[entity].state;
+        const state = this._hass.states[entity]?.state;
 
         this._hass.callService(
           "switch",
@@ -70,22 +72,24 @@ class LegacyCamCard extends HTMLElement {
     }
   }
 
-  updatePreview() {
+  _updatePreview() {
     const img = this.querySelector("#preview");
+    if (!img) return;
 
     const cam = this._hass.states[this.config.entity];
     if (!cam) return;
 
     img.src = cam.attributes.entity_picture || this.config.snapshot;
 
-    img.style.transform = `rotate(${this.config.rotation || 0}deg)`;
+    const rot = this.config.rotation || 0;
+    img.style.transform = `rotate(${rot}deg)`;
   }
 
   getCardSize() {
     return 3;
   }
 
-  // 👇 IMPORTANTISSIMO: abilita editor UI
+  // 👉 Lovelace editor
   static getConfigElement() {
     return document.createElement("legacycam-card-editor");
   }

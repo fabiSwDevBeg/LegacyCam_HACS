@@ -16,11 +16,12 @@ class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=f"LegacyCam {user_input['ip']}",
+                    title=user_input["name"],
                     data=user_input
                 )
 
         schema = vol.Schema({
+            vol.Required("name", default="LegacyCam"): str,
             vol.Required("ip"): str,
             vol.Required("clip_seconds", default=10): vol.All(vol.Coerce(int), vol.Range(5, 300)),
             vol.Required("retention_hours", default=3): vol.All(vol.Coerce(int), vol.Range(1, 168)),

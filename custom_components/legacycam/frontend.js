@@ -1,4 +1,4 @@
-const loadCard = () => {
+const load = () => {
   if (!customElements.get("legacycam-card")) {
     import("/hacsfiles/legacycam/legacycam-card.js");
   }
@@ -8,11 +8,11 @@ const loadCard = () => {
   }
 };
 
-loadCard();
+load();
 
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "legacycam-card",
   name: "LegacyCam Card",
-  description: "MJPEG camera card with flash + overlay stream + rotation"
+  description: "Camera MJPEG + flash + overlay stream"
 });

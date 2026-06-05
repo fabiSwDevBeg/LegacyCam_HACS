@@ -6,12 +6,12 @@ class LegacyCamCardEditor extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    if (!this.rendered) this.render();
+    if (!this._rendered) this._render();
   }
 
-  render() {
+  _render() {
     this.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:12px; padding:10px;">
+      <div class="lc-editor">
 
         <label>Camera entity</label>
         <select id="entity"></select>
@@ -21,6 +21,9 @@ class LegacyCamCardEditor extends HTMLElement {
 
         <label>Stream URL</label>
         <input id="stream" type="text" placeholder="http://IP:8080/stream" />
+
+        <label>Snapshot URL</label>
+        <input id="snapshot" type="text" placeholder="http://IP:8080/snapshot.jpg" />
 
         <label>Rotation</label>
         <select id="rotation">
@@ -33,21 +36,22 @@ class LegacyCamCardEditor extends HTMLElement {
       </div>
     `;
 
-    this.fillEntities();
+    this._fillEntities();
 
     this.querySelector("#entity").value = this.config.entity || "";
     this.querySelector("#flash").value = this.config.flash_entity || "";
     this.querySelector("#stream").value = this.config.stream || "";
+    this.querySelector("#snapshot").value = this.config.snapshot || "";
     this.querySelector("#rotation").value = this.config.rotation || 0;
 
     this.querySelectorAll("input, select").forEach(el => {
-      el.onchange = () => this.updateConfig();
+      el.onchange = () => this._updateConfig();
     });
 
-    this.rendered = true;
+    this._rendered = true;
   }
 
-  fillEntities() {
+  _fillEntities() {
     const entities = Object.keys(this._hass.states);
 
     const camSelect = this.querySelector("#entity");
@@ -56,31 +60,32 @@ class LegacyCamCardEditor extends HTMLElement {
     entities.forEach(e => {
       const opt1 = document.createElement("option");
       opt1.value = e;
-      opt1.text = e;
+      opt1.textContent = e;
 
-      const opt2 = opt1.cloneNode(true);
+      const opt2 = document.createElement("option");
+      opt2.value = e;
+      opt2.textContent = e;
 
       camSelect.appendChild(opt1);
       flashSelect.appendChild(opt2);
     });
   }
 
-  updateConfig() {
-    const configEvent = new CustomEvent("config-changed", {
+  _updateConfig() {
+    this.dispatchEvent(new CustomEvent("config-changed", {
       detail: {
         config: {
           ...this.config,
           entity: this.querySelector("#entity").value,
           flash_entity: this.querySelector("#flash").value,
           stream: this.querySelector("#stream").value,
+          snapshot: this.querySelector("#snapshot").value,
           rotation: parseInt(this.querySelector("#rotation").value)
         }
       },
       bubbles: true,
       composed: true
-    });
-
-    this.dispatchEvent(configEvent);
+    }));
   }
 }
 
