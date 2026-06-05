@@ -21,6 +21,10 @@ class LegacyCamFlashSwitch(SwitchEntity):
         return "LegacyCam Flash"
 
     @property
+    def unique_id(self):
+        return f"legacycam_flash_{self._ip}"
+    
+    @property
     def is_on(self):
         return self._state
 

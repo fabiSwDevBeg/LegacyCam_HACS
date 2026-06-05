@@ -23,11 +23,17 @@ class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({
             vol.Required("name", default="LegacyCam"): str,
             vol.Required("ip"): str,
-            vol.Required("clip_seconds", default=10): vol.All(vol.Coerce(int), vol.Range(5, 300)),
-            vol.Required("retention_hours", default=3): vol.All(vol.Coerce(int), vol.Range(1, 168)),
-            vol.Required("rotation", default=0): vol.In([0, 90, 180, 270]),
-        })
+            vol.Required(
+                "clip_seconds",
+                default=10
+            ): vol.All(vol.Coerce(int), vol.Range(5, 300)),
 
+            vol.Required(
+                "retention_hours",
+                default=3
+            ): vol.All(vol.Coerce(int), vol.Range(1, 168)),
+        })
+        
         return self.async_show_form(
             step_id="user",
             data_schema=schema,

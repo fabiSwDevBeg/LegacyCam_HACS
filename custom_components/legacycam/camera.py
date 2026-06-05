@@ -25,6 +25,14 @@ class LegacyCamCamera(Camera):
     def name(self):
         return self._name
 
+    @property
+    def unique_id(self):
+        return f"legacycam_{self._ip}"
+
+    @property
+    def available(self):
+        return True
+
     def camera_image(self):
         try:
             return requests.get(self._snapshot, timeout=5).content
