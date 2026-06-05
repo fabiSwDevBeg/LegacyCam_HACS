@@ -1,0 +1,8 @@
+DOMAIN = "legacycam"
+
+CONF_IP = "ip"
+CONF_CLIP_SECONDS = "clip_seconds"
+CONF_RETENTION_HOURS = "retention_hours"
+
+DEFAULT_CLIP_SECONDS = 10
+DEFAULT_RETENTION_HOURS = 3
