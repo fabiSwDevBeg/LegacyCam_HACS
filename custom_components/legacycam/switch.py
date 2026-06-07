@@ -1,20 +1,36 @@
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import aiohttp
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    CONF_IP,
+    CONF_NAME,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    ENDPOINT_FLASH_OFF,
+    ENDPOINT_FLASH_ON,
+)
+from .util import device_info, endpoint_url
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    ip = entry.data["ip"]
-    async_add_entities([LegacyCamFlashSwitch(ip)])
+    ip = entry.data[CONF_IP]
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+
+    async_add_entities([LegacyCamFlashSwitch(coordinator, ip, name)])
 
 
-class LegacyCamFlashSwitch(SwitchEntity):
+class LegacyCamFlashSwitch(CoordinatorEntity, SwitchEntity):
 
-    def __init__(self, ip):
+    def __init__(self, coordinator, ip, name):
+        super().__init__(coordinator)
         self._ip = ip
-        self._state = False
+        self._device_name = name
 
     @property
     def name(self):
@@ -25,19 +41,27 @@ class LegacyCamFlashSwitch(SwitchEntity):
         return f"legacycam_flash_{self._ip}"
     
     @property
+    def device_info(self):
+        return device_info(self._ip, self._device_name)
+
+    @property
+    def available(self):
+        return bool(self.coordinator.data.get("online"))
+
+    @property
     def is_on(self):
-        return self._state
+        return bool(self.coordinator.data.get("flash"))
 
     async def async_turn_on(self):
-        await self._call(f"http://{self._ip}:8080/flash/on")
-        self._state = True
-        self.async_write_ha_state()
+        await self._call(ENDPOINT_FLASH_ON)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
-        await self._call(f"http://{self._ip}:8080/flash/off")
-        self._state = False
-        self.async_write_ha_state()
+        await self._call(ENDPOINT_FLASH_OFF)
+        await self.coordinator.async_request_refresh()
 
-    async def _call(self, url):
-        async with aiohttp.ClientSession() as session:
-            await session.get(url)
+    async def _call(self, path):
+        session = async_get_clientsession(self.hass)
+
+        async with session.get(endpoint_url(self._ip, path), timeout=DEFAULT_TIMEOUT):
+            return

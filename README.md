@@ -1,157 +1,72 @@
-# LegacyCam - Home Assistant HACS Integration
+# LegacyCam - Home Assistant Integration
 
-LegacyCam is a custom Home Assistant integration designed for simple IP cameras exposing:
-- MJPEG stream
-- Snapshot endpoint
-- Flash control (on/off via HTTP)
-- Video clip recording with retention management
+LegacyCam is a HACS integration for an iPhone 4 running the LegacyCam backend. It treats the phone as one Home Assistant device with a camera entity, flash switch, online binary sensor, and lightweight status sensors.
 
----
+## Architecture Proposal
 
-## 📌 Features
+- `config_flow.py`: collects only device name and IP address.
+- `coordinator.py`: polls `/status` every 30 seconds.
+- `camera.py`: exposes the MJPEG stream and snapshot through Home Assistant camera architecture.
+- `switch.py`: controls flash through `/flash/on` and `/flash/off`; state comes from coordinator data.
+- `sensor.py`: exposes uptime, stream clients, and backend version.
+- `binary_sensor.py`: exposes online status.
+- `util.py` and `const.py`: centralize endpoint generation and constants.
 
-- 📹 MJPEG live stream support
-- 📸 Snapshot support
-- 💡 Flash ON/OFF switch via HTTP endpoints
-- 🎥 FFmpeg-based clip recording
-- 🧠 Automatic retention management (based on hours + clip duration)
-- ⚙️ Fully configurable via Home Assistant UI (Config Flow)
+## Folder Structure Proposal
 
----
-
-## 📷 Supported Camera Endpoints
-
-Your device must expose:
-
+```text
+custom_components/legacycam/
+  __init__.py
+  binary_sensor.py
+  camera.py
+  config_flow.py
+  const.py
+  coordinator.py
+  sensor.py
+  switch.py
+  util.py
+  manifest.json
 ```
+
+## Refactor Plan
+
+1. Use `/ping` in the config flow for cheap connection testing.
+2. Use one `DataUpdateCoordinator` for `/status` polling.
+3. Make every entity share the same `device_info`.
+4. Keep raw backend URLs out of user configuration.
+5. Remove unused flash services, clip recording, and retention settings until there is a clear active workflow for them.
+
+## Entities
+
+- `camera.legacycam`
+- `switch.legacycam_flash`
+- `binary_sensor.legacycam_online`
+- `sensor.legacycam_uptime`
+- `sensor.legacycam_stream_clients`
+- `sensor.legacycam_version`
+
+## Breaking Changes
+
+- Config flow no longer asks for clip duration or retention hours.
+- Unused services and FFmpeg clip recording code were removed.
+- Flash switch state is no longer local; it is read from `/status`.
+- The backend must expose `/ping`, `/status`, and `/flash/status`.
+
+## Migration Steps
+
+1. Update the iPhone backend first.
+2. Update this HACS integration and restart Home Assistant.
+3. If an existing config entry has old clip/retention fields, it can remain; they are ignored.
+4. Update dashboards to use the camera and switch entities instead of raw stream or snapshot URLs.
+
+## Supported Backend Endpoints
+
+```text
+http://DEVICE_IP:8080/ping
+http://DEVICE_IP:8080/status
 http://DEVICE_IP:8080/stream
 http://DEVICE_IP:8080/snapshot.jpg
 http://DEVICE_IP:8080/flash/on
 http://DEVICE_IP:8080/flash/off
+http://DEVICE_IP:8080/flash/status
 ```
-
----
-
-## ⚙️ Installation (HACS)
-
-### 1. Add custom repository
-- Go to HACS → Integrations
-- Add custom repository
-- URL: your GitHub repo
-- Category: Integration
-
-### 2. Install LegacyCam
-- Search "LegacyCam"
-- Install
-- Restart Home Assistant
-
----
-
-## 🧩 Configuration
-
-When adding the integration, you must provide:
-
-### Required
-- **IP Address** of the camera
-
-### Advanced options
-- Clip duration (seconds): `5 - 300`
-- Retention time (hours): `1 - 168`
-
----
-
-## 🧠 Retention Logic
-
-LegacyCam automatically calculates how many video snippets to keep:
-
-```
-snippets = ceil(retention_seconds / clip_seconds)
-```
-
-Example:
-- Clip duration: 190 seconds
-- Retention: 1 hour (3600 seconds)
-
-```
-3600 / 190 = 18.94 → 19 clips retained
-```
-
-Older clips are automatically deleted.
-
----
-
-## 📁 Storage
-
-All recordings are stored in:
-
-```
-/config/www/legacycam/
-```
-
----
-
-## 🎥 Recording
-
-You can trigger clip recording via service:
-
-```yaml
-service: legacycam.record_clip
-data:
-  duration: 10
-```
-
----
-
-## 💡 Flash Control
-
-A switch is created:
-
-- `switch.legacycam_flash`
-
-It calls:
-- ON → `/flash/on`
-- OFF → `/flash/off`
-
----
-
-## 📸 Snapshot
-
-Snapshot is available via camera entity or service:
-
-```
-legacycam.snapshot
-```
-
----
-
-## 📹 Camera Entity
-
-```
-camera.legacycam
-```
-
-Supports MJPEG streaming.
-
----
-
-## ⚠️ Requirements
-
-- Home Assistant 2024+
-- FFmpeg installed in HA
-- Device reachable via HTTP
-
----
-
-## 🚀 Roadmap
-
-- Stream proxy optimization
-- Rotation filter support (90/180/270)
-- Motion detection events
-- Continuous recording mode (NVR-like)
-- Lovelace custom card
-
----
-
-## ❤️ Notes
-
-This integration is designed for lightweight IP cameras exposing simple HTTP endpoints.

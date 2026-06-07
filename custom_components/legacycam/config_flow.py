@@ -1,6 +1,6 @@
 import voluptuous as vol
 from homeassistant import config_entries
-from .const import DOMAIN
+from .const import CONF_IP, CONF_NAME, DEFAULT_NAME, DOMAIN
 from .util import test_camera
 
 class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -10,28 +10,19 @@ class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            ip_ok = await test_camera(user_input["ip"])
+            ip_ok = await test_camera(user_input[CONF_IP])
 
             if not ip_ok:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=user_input["name"],
+                    title=user_input[CONF_NAME],
                     data=user_input
                 )
 
         schema = vol.Schema({
-            vol.Required("name", default="LegacyCam"): str,
-            vol.Required("ip"): str,
-            vol.Required(
-                "clip_seconds",
-                default=10
-            ): vol.All(vol.Coerce(int), vol.Range(5, 300)),
-
-            vol.Required(
-                "retention_hours",
-                default=3
-            ): vol.All(vol.Coerce(int), vol.Range(1, 168)),
+            vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+            vol.Required(CONF_IP): str,
         })
         
         return self.async_show_form(

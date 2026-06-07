@@ -1,8 +1,20 @@
 DOMAIN = "legacycam"
 
+CONF_NAME = "name"
 CONF_IP = "ip"
-CONF_CLIP_SECONDS = "clip_seconds"
-CONF_RETENTION_HOURS = "retention_hours"
 
-DEFAULT_CLIP_SECONDS = 10
-DEFAULT_RETENTION_HOURS = 3
+DEFAULT_NAME = "LegacyCam"
+DEFAULT_PORT = 8080
+DEFAULT_TIMEOUT = 5
+UPDATE_INTERVAL_SECONDS = 30
+
+ENDPOINT_STREAM = "/stream"
+ENDPOINT_SNAPSHOT = "/snapshot.jpg"
+ENDPOINT_FLASH_ON = "/flash/on"
+ENDPOINT_FLASH_OFF = "/flash/off"
+ENDPOINT_FLASH_STATUS = "/flash/status"
+ENDPOINT_STATUS = "/status"
+ENDPOINT_PING = "/ping"
+
+MANUFACTURER = "LegacyCam"
+MODEL = "iPhone 4 Camera"
