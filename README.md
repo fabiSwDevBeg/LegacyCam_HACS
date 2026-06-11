@@ -6,7 +6,7 @@ LegacyCam is a HACS integration for an iPhone 4 running the LegacyCam backend. I
 
 - `config_flow.py`: collects only device name and IP address.
 - `coordinator.py`: polls `/status` every 30 seconds.
-- `camera.py`: exposes the MJPEG stream and snapshot through Home Assistant camera architecture.
+- `camera.py`: exposes the MJPEG stream through Home Assistant camera architecture.
 - `switch.py`: controls flash through `/flash/on` and `/flash/off`; state comes from coordinator data.
 - `sensor.py`: exposes uptime, stream clients, and backend version.
 - `binary_sensor.py`: exposes online status.
@@ -57,7 +57,7 @@ custom_components/legacycam/
 1. Update the iPhone backend first.
 2. Update this HACS integration and restart Home Assistant.
 3. If an existing config entry has old clip/retention fields, it can remain; they are ignored.
-4. Update dashboards to use the camera and switch entities instead of raw stream or snapshot URLs.
+4. Update dashboards to use the camera and switch entities instead of raw backend URLs.
 
 ## Supported Backend Endpoints
 
@@ -65,7 +65,6 @@ custom_components/legacycam/
 http://DEVICE_IP:8080/ping
 http://DEVICE_IP:8080/status
 http://DEVICE_IP:8080/stream
-http://DEVICE_IP:8080/snapshot.jpg
 http://DEVICE_IP:8080/flash/on
 http://DEVICE_IP:8080/flash/off
 http://DEVICE_IP:8080/flash/status
