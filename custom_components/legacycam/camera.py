@@ -45,7 +45,7 @@ class LegacyCamCamera(CoordinatorEntity, Camera):
 
     @property
     def available(self):
-        return bool(self.coordinator.data.get("online"))
+        return bool((self.coordinator.data or {}).get("online"))
 
     async def stream_source(self):
         return self._stream

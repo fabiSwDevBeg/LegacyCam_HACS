@@ -3,7 +3,7 @@
   "name": "LegacyCam",
   "version": "1.0.0",
   "documentation": "https://example.com",
-  "requirements": [],
+  "requirements": ["Pillow>=10.0.0"],
   "codeowners": ["@you"],
   "config_flow": true,
   "iot_class": "local_polling"

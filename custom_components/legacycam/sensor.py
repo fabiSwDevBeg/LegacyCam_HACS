@@ -1,4 +1,5 @@
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.const import UnitOfTime
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,6 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         LegacyCamUptimeSensor(coordinator, ip, name),
         LegacyCamStreamClientsSensor(coordinator, ip, name),
         LegacyCamVersionSensor(coordinator, ip, name),
+        LegacyCamMotionScoreSensor(coordinator, ip, name),
     ])
 
 
@@ -31,7 +33,7 @@ class LegacyCamSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self):
-        return bool(self.coordinator.data.get("online"))
+        return bool((self.coordinator.data or {}).get("online"))
 
 
 class LegacyCamUptimeSensor(LegacyCamSensor):
@@ -46,7 +48,7 @@ class LegacyCamUptimeSensor(LegacyCamSensor):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get("uptime")
+        return (self.coordinator.data or {}).get("uptime")
 
     @property
     def native_unit_of_measurement(self):
@@ -65,7 +67,7 @@ class LegacyCamStreamClientsSensor(LegacyCamSensor):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get("stream_clients")
+        return (self.coordinator.data or {}).get("stream_clients")
 
 
 class LegacyCamVersionSensor(LegacyCamSensor):
@@ -80,4 +82,30 @@ class LegacyCamVersionSensor(LegacyCamSensor):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get("version")
+        return (self.coordinator.data or {}).get("version")
+
+
+class LegacyCamMotionScoreSensor(LegacyCamSensor):
+
+    @property
+    def name(self):
+        return "LegacyCam Motion Score"
+
+    @property
+    def unique_id(self):
+        return f"legacycam_motion_score_{self._ip}"
+
+    @property
+    def available(self):
+        data = self.coordinator.data or {}
+        return bool(data.get("online")) and bool(
+            data.get("motion_detection")
+        )
+
+    @property
+    def native_value(self):
+        return (self.coordinator.data or {}).get("motion_score")
+
+    @property
+    def native_unit_of_measurement(self):
+        return PERCENTAGE

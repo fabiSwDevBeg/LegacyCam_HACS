@@ -22,7 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     name = entry.data.get(CONF_NAME, DEFAULT_NAME)
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    async_add_entities([LegacyCamFlashSwitch(coordinator, ip, name)])
+    async_add_entities([
+        LegacyCamFlashSwitch(coordinator, ip, name),
+        LegacyCamMotionDetectionSwitch(coordinator, ip, name),
+        LegacyCamRecordingSwitch(coordinator, ip, name),
+    ])
 
 
 class LegacyCamFlashSwitch(CoordinatorEntity, SwitchEntity):
@@ -46,11 +50,11 @@ class LegacyCamFlashSwitch(CoordinatorEntity, SwitchEntity):
 
     @property
     def available(self):
-        return bool(self.coordinator.data.get("online"))
+        return bool((self.coordinator.data or {}).get("online"))
 
     @property
     def is_on(self):
-        return bool(self.coordinator.data.get("flash"))
+        return bool((self.coordinator.data or {}).get("flash"))
 
     async def async_turn_on(self):
         await self._call(ENDPOINT_FLASH_ON)
@@ -65,3 +69,68 @@ class LegacyCamFlashSwitch(CoordinatorEntity, SwitchEntity):
 
         async with session.get(endpoint_url(self._ip, path), timeout=DEFAULT_TIMEOUT):
             return
+
+
+class LegacyCamRuntimeSwitch(CoordinatorEntity, SwitchEntity):
+
+    def __init__(self, coordinator, ip, device_name):
+        super().__init__(coordinator)
+        self._ip = ip
+        self._device_name = device_name
+
+    @property
+    def device_info(self):
+        return device_info(self._ip, self._device_name)
+
+    @property
+    def available(self):
+        return bool((self.coordinator.data or {}).get("online"))
+
+
+class LegacyCamMotionDetectionSwitch(LegacyCamRuntimeSwitch):
+
+    @property
+    def name(self):
+        return "LegacyCam Motion Detection"
+
+    @property
+    def unique_id(self):
+        return f"legacycam_motion_detection_{self._ip}"
+
+    @property
+    def is_on(self):
+        return bool((self.coordinator.data or {}).get("motion_detection"))
+
+    async def async_turn_on(self):
+        await self.coordinator.async_set_motion_detection_enabled(True)
+
+    async def async_turn_off(self):
+        await self.coordinator.async_set_motion_detection_enabled(False)
+
+
+class LegacyCamRecordingSwitch(LegacyCamRuntimeSwitch):
+
+    @property
+    def name(self):
+        return "LegacyCam Recording"
+
+    @property
+    def unique_id(self):
+        return f"legacycam_recording_{self._ip}"
+
+    @property
+    def is_on(self):
+        return bool((self.coordinator.data or {}).get("recording"))
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "path": (self.coordinator.data or {}).get("recording_path"),
+            "error": (self.coordinator.data or {}).get("recording_error"),
+        }
+
+    async def async_turn_on(self):
+        await self.coordinator.async_set_recording_enabled(True)
+
+    async def async_turn_off(self):
+        await self.coordinator.async_set_recording_enabled(False)
