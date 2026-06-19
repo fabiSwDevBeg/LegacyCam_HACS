@@ -1,5 +1,6 @@
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
 from .const import (
     CONF_IP,
     CONF_MOTION_FLASH_HOLD_SECONDS,
@@ -24,15 +25,16 @@ from .util import test_camera
 class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
+    @callback
     def async_get_options_flow(config_entry):
-        return LegacyCamOptionsFlow(config_entry)
+        return LegacyCamOptionsFlow()
 
     async def async_step_user(self, user_input=None):
         errors = {}
 
         if user_input is not None:
 
-            ip_ok = await test_camera(user_input[CONF_IP])
+            ip_ok = await test_camera(self.hass, user_input[CONF_IP])
 
             if not ip_ok:
                 errors["base"] = "cannot_connect"
@@ -55,9 +57,6 @@ class LegacyCamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class LegacyCamOptionsFlow(config_entries.OptionsFlow):
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
